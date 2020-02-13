@@ -11,7 +11,6 @@ public class Main {
 		ProgramInformations programInfos = utilities.verifArgs(args);
 		Encryptor encryptor = new Encryptor();
 		// encryptor.setRandomKey("AES");
-		encryptor.setKeyFromString(programInfos.key, "AES");
 
 		/*
 		 * Testing part
@@ -22,34 +21,43 @@ public class Main {
 		 */
 
 		if (programInfos.filesInput.size() == 1) {
+			encryptor.setKeyFromString(programInfos.key, "AES");
 			byte[] msg = utilities.getBytesFromFile(programInfos.filesInput.get(0));
-			String test = utilities.convertBytesArrayToString(msg);
-			System.out.println(test);
-			byte[] encrypted = encryptor.encryption(msg);
-			test = utilities.convertBytesArrayToString(encrypted);
-			System.out.println(test);
-			byte[] decrypted = encryptor.decryption(encrypted);
-			test = utilities.convertBytesArrayToString(decrypted);
-			System.out.println(test);
-			utilities.bytesToFile(decrypted, programInfos.fileOutput);
+			//String test = utilities.convertBytesArrayToString(msg);
+			//System.out.println(test);
+			byte[] output = null ;
+			if (programInfos.encryptionMode.equals("-enc")) {
+				output = encryptor.encryption(msg);
+			}
+			else {
+				output = encryptor.decryption(msg);
+			}
+			//test = utilities.convertBytesArrayToString(decrypted);
+			//System.out.println(test);
+			utilities.bytesToFile(output, programInfos.fileOutput);
 
 		} else {
 			Path tmp = Paths.get(programInfos.fileOutput);
 			String locationFolder = tmp.getParent().toString();
 
 			for (int i = 0; i < programInfos.filesInput.size(); i++) {
-				byte[] msg = utilities.getBytesFromFile(programInfos.filesInput.get(i));
-				String test = utilities.convertBytesArrayToString(msg);
-				System.out.println(test);
-				byte[] encrypted = encryptor.encryption(msg);
-				test = utilities.convertBytesArrayToString(encrypted);
-				System.out.println(test);
-				byte[] decrypted = encryptor.decryption(encrypted);
-				test = utilities.convertBytesArrayToString(decrypted);
-
 				File f = new File(programInfos.filesInput.get(i));
 				String fileName = f.getName();
-				utilities.bytesToFile(decrypted, locationFolder + "/" + fileName);
+				
+				programInfos.key = programInfos.key.substring(0,programInfos.key.length() - fileName.length());
+				programInfos.key = programInfos.key + fileName;
+				encryptor.setKeyFromString(programInfos.key, "AES");
+				
+				byte[] msg = utilities.getBytesFromFile(programInfos.filesInput.get(i));
+			
+				byte[] output = null ;
+				if (programInfos.encryptionMode.equals("-enc")) {
+					output = encryptor.encryption(msg);
+				}
+				else {
+					output = encryptor.decryption(msg);
+				}
+				utilities.bytesToFile(output, locationFolder + "/" + fileName);
 			}
 			Utilities.pack(locationFolder, programInfos.fileOutput + ".zip");
 			for (int i = 0; i < programInfos.filesInput.size(); i++) {

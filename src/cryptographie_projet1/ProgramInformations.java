@@ -7,6 +7,7 @@ public class ProgramInformations {
 	public List<String> filesInput = new ArrayList<String>();
 	public String fileOutput;
 	public String key;
+	public String encryptionMode;
 
 	public void addInputFile(String location) {
 		filesInput.add(location);

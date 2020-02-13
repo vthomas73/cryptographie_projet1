@@ -21,6 +21,7 @@ public class Utilities {
 		int nbFileList = args.length - 7;
 		if (!args[0].equals("-enc") && !args[0].equals("-dec"))
 			throw new Exception("Le premier argument doit être : –enc|-dec");
+		programInfos.encryptionMode = args[0];
 		if (args.length < 2 || !args[1].equals("-key"))
 			throw new Exception("Le deuxième argument doit être : –key");
 		if (args.length < 3)
