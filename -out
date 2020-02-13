@@ -1,0 +1,13 @@
+#!/bin/bash
+proxyState=$(networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportnetwork)
+
+if [ "$proxyState" = "Current Wi-Fi Network: WIFISEN" ]
+then
+    networksetup -setautoproxystate "Wi-Fi" on
+    networksetup -setautoproxyurl "Wi-Fi" http://intranet.isen.fr/proxy.pac
+	echo "Le proxy a bien été activé"
+else
+	networksetup -setautoproxystate "Wi-Fi" off
+	echo "Le proxy a bien été désactivé"
+fi
+#networksetup -setautoproxyurl "Wi-Fi" http://intranet.isen.fr/proxy.pac
