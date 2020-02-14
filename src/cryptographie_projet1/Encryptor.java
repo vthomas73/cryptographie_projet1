@@ -1,6 +1,9 @@
 package cryptographie_projet1;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.BadPaddingException;
@@ -9,13 +12,14 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Encryptor {
 	private SecretKey key;
 	private Cipher cipher;
 	private String encryptionType;
-	private String ALGO_OPTIONS = "/ECB/PKCS5Padding";
+	private String ALGO_OPTIONS = "/CBC/PKCS5Padding";
 
 	public SecretKey setRandomKey(String encryptionType) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		KeyGenerator keyGen = KeyGenerator.getInstance(encryptionType);
@@ -36,15 +40,23 @@ public class Encryptor {
 		return this.key;
 	}
 
-	public byte[] encryption(byte[] msg) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException {
-		this.cipher.init(Cipher.ENCRYPT_MODE, this.key);
+	public byte[] encryption(byte[] msg, IvParameterSpec iv) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+		if (iv != null) {
+			this.cipher.init(Cipher.ENCRYPT_MODE, this.key, iv);
+		} else {
+			this.cipher.init(Cipher.ENCRYPT_MODE, this.key);
+		}
 		return cipher.doFinal(msg);
 	}
 
-	public byte[] decryption(byte[] msg) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException {
-		this.cipher.init(Cipher.DECRYPT_MODE, this.key);
+	public byte[] decryption(byte[] msg, IvParameterSpec iv) throws InvalidKeyException, NoSuchAlgorithmException,
+			NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+		if (iv != null) {
+			this.cipher.init(Cipher.DECRYPT_MODE, this.key, iv);
+		} else {
+			this.cipher.init(Cipher.DECRYPT_MODE, this.key);
+		}
 		return cipher.doFinal(msg);
 
 	}
@@ -56,5 +68,11 @@ public class Encryptor {
 			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
 		}
 		return data;
+	}
+
+	public byte[] get16BytesFromString(String msg) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		md.update(msg.getBytes());
+		return md.digest();
 	}
 }
