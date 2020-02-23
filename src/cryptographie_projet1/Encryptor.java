@@ -5,11 +5,11 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -19,7 +19,7 @@ public class Encryptor {
 	private SecretKey key;
 	private Cipher cipher;
 	private String encryptionType;
-	private String ALGO_OPTIONS = "/CBC/PKCS5Padding";
+	private String ALGO_OPTIONS = "/CBC/PKCS5PADDING";
 
 	public SecretKey setRandomKey(String encryptionType) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		KeyGenerator keyGen = KeyGenerator.getInstance(encryptionType);
@@ -75,4 +75,13 @@ public class Encryptor {
 		md.update(msg.getBytes());
 		return md.digest();
 	}
+	
+	public byte[] calculateHMAC(byte[] data, String key)
+		    throws NoSuchAlgorithmException, InvalidKeyException
+		{
+		    SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), "HmacSHA512");
+		    Mac mac = Mac.getInstance("HmacSHA512");
+		    mac.init(secretKeySpec);
+		    return mac.doFinal(data);
+		}
 }

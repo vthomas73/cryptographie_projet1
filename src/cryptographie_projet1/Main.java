@@ -3,6 +3,7 @@ package cryptographie_projet1;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import javax.crypto.spec.IvParameterSpec;
 
@@ -23,6 +24,8 @@ public class Main {
 		 */
 
 		if (programInfos.filesInput.size() == 1) {
+			// FileTime creationTime = (FileTime) Files.getAttribute(fInput.toPath(),
+			// "creationTime");
 			File fInput = new File(programInfos.filesInput.get(0));
 			String fileNameInput = fInput.getName();
 			File fOutput = new File(programInfos.fileOutput);
@@ -32,8 +35,18 @@ public class Main {
 			byte[] output = null;
 			if (programInfos.encryptionMode.equals("-enc")) {
 				output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
+				byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
+				byte[] msgFinal = new byte[output.length + hmac.length];
+				System.arraycopy(output, 0, msgFinal, 0, output.length);
+				System.arraycopy(hmac, 0, msgFinal, output.length, hmac.length);
+				output = msgFinal;
 			} else {
+				byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
+				msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
 				output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
+				byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
+				if (Arrays.equals(hmac, hmacGetted))
+				    System.out.println("Intégrité vérifiée, le fichier n'a pas été altéré");
 			}
 			utilities.bytesToFile(output, programInfos.fileOutput);
 
@@ -42,6 +55,8 @@ public class Main {
 			String locationFolder = tmp.getParent().toString();
 
 			for (int i = 0; i < programInfos.filesInput.size(); i++) {
+				// FileTime creationTime = (FileTime) Files.getAttribute(fInput.toPath(),
+				// "creationTime");
 				File fInput = new File(programInfos.filesInput.get(i));
 				String fileName = fInput.getName();
 
@@ -51,9 +66,20 @@ public class Main {
 
 				byte[] output = null;
 				if (programInfos.encryptionMode.equals("-enc")) {
+					
 					output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
+					byte[] msgFinal = new byte[output.length + hmac.length];
+					System.arraycopy(output, 0, msgFinal, 0, output.length);
+					System.arraycopy(hmac, 0, msgFinal, output.length, hmac.length);
+					output = msgFinal;
 				} else {
+					byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
+					msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
 					output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
+					if (Arrays.equals(hmac, hmacGetted))
+					    System.out.println("Intégrité vérifiée pour le fichier " + fileName + ", le fichier n'a pas été altéré");
 				}
 				utilities.bytesToFile(output, locationFolder + "/" + fileName);
 			}
