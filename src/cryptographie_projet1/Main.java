@@ -3,6 +3,7 @@ package cryptographie_projet1;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import javax.crypto.spec.IvParameterSpec;
@@ -13,9 +14,10 @@ public class Main {
 		Utilities utilities = new Utilities();
 		ProgramInformations programInfos = utilities.verifArgs(args);
 		Encryptor encryptor = new Encryptor();
+		SecureRandom random = new SecureRandom();
+		byte[] iv = new byte[16];
 		// encryptor.setRandomKey("AES");
 
-		
 		  //Testing part
 		  
 		  /*byte[] msg = { (byte)0x10, (byte)0x07, (byte)0x32, (byte) 0x19, (byte)0x22,
@@ -36,24 +38,41 @@ public class Main {
 			if (programInfos.encryptionMode.equals("-enc")) {
 				
 				// Question 1
-				output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
+				// Generate a secure random IV
+				iv = random.generateSeed(16);
+				output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(iv));
 				
 				// Question 6
 				//output = encryptor.cipherCts("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
+				
 				byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
-				byte[] msgFinal = new byte[output.length + hmac.length];
-				System.arraycopy(output, 0, msgFinal, 0, output.length);
-				System.arraycopy(hmac, 0, msgFinal, output.length, hmac.length);
+				byte[] msgFinal = new byte[iv.length + output.length + hmac.length];
+				System.arraycopy(iv, 0, msgFinal, 0, iv.length);
+				System.arraycopy(output, 0, msgFinal, iv.length, output.length);
+				System.arraycopy(hmac, 0, msgFinal, iv.length + output.length, hmac.length);
 				output = msgFinal;
 			} else {
+				
+				// Question 1 :
+				
+				//Get back the IV (16 first bytes of the message)
+				iv = encryptor.getIv(msg);
+				
+				//Copy msg value into a new string that is 16 bytes less wide
+				msg = encryptor.getCiphertextProperLength(msg, iv.length);
+				
+				//Get the Hmac from the message (the last 64 bytes)
 				byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
+				// remove the 64 last bytes from the message
 				msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
 				
-				// Question 1
-				output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
+				//Decrypt msg
+				output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(iv));
+				//Erase the padding if there is some
 				output = encryptor.removeBytesAdded(output);
 				
-				// Question 6
+				// Question 6 :
+				
 				//output = encryptor.cipherCts("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
 				
 				byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
@@ -80,26 +99,40 @@ public class Main {
 				if (programInfos.encryptionMode.equals("-enc")) {
 					
 					// Question 1
-					output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					// Generate a secure random IV
+					iv = random.generateSeed(16);
+					output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(iv));
 					
 					// Question 6
 					//output = encryptor.cipherCts("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
 					byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
-					byte[] msgFinal = new byte[output.length + hmac.length];
+					byte[] msgFinal = new byte[iv.length + output.length + hmac.length];
+					System.arraycopy(iv, 0, msgFinal, 0, iv.length);
 					System.arraycopy(output, 0, msgFinal, 0, output.length);
-					System.arraycopy(hmac, 0, msgFinal, output.length, hmac.length);
+					System.arraycopy(hmac, 0, msgFinal, iv.length + output.length, hmac.length);
 					output = msgFinal;
 				} else {
+					// Question 1 :
+					
+					//Get back the IV (16 first bytes of the message)
+					iv = encryptor.getIv(msg);
+					
+					//Copy msg value into a new string that is 16 bytes less wide
+					msg = encryptor.getCiphertextProperLength(msg, iv.length);
+					
+					//Get the Hmac from the message (the last 64 bytes)
 					byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
+					// remove the 64 last bytes from the message
 					msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
 					
-					// Question 1
-					output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					//Decrypt msg
+					output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(iv));
+					//Erase the padding if there is some
 					output = encryptor.removeBytesAdded(output);
 					
-					// Question 6
-					//output = encryptor.cipherCts("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					// Question 6 :
 					
+					//output = encryptor.cipherCts("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
 					
 					byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
 					if (Arrays.equals(hmac, hmacGetted))
@@ -114,7 +147,6 @@ public class Main {
 				f = new File(locationFolder + "/" + fileName);
 				f.delete();
 			}
-
 		}
 	}
 }

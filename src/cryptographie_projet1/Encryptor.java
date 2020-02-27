@@ -406,18 +406,27 @@ public class Encryptor {
 		// Creation of a byte array that will get the new_message
 		byte[] new_message = msg;
 		// Get the last byte in the message
-		int lastBit = msg[msg.length -1];
+		int lastBit = -1;
+		if(msg.length > 0) {
+			// Get the last byte in the message
+			lastBit = msg[msg.length -1];
+		}
+		
 		// Set a Boolean as true if he turn to false then the message will not be modify
 		boolean verif = true;
-		
-		// To see if the last byte represent a PCKS5Padding byte or not
-		for(int i = 1; i <= lastBit; i++) {
-			if(msg.length-i >= 0) {
-				if(msg[msg.length-i] != lastBit) {
-					verif = false;
+		if(lastBit >= 0) {
+			// To see if the last byte represent a PCKS5Padding byte or not
+			for(int i = 1; i <= lastBit; i++) {
+				if(msg.length-i >= 0) {
+					if(msg[msg.length-i] != lastBit) {
+						verif = false;
+					}
 				}
 			}
+		} else {
+			verif = false;
 		}
+		
 		
 		// if the last byte represent a PCKS5Padding byte
 		if(verif) {
@@ -429,6 +438,25 @@ public class Encryptor {
 		}
 		
 			
+		return new_message;
+	}
+	
+	public byte[] getIv(byte[] msg) {
+		byte[] iv = new byte[16];
+		for(int i = 0; i < iv.length; i++) {
+			iv[i] = msg[i];
+		}
+		return iv;
+	}
+	
+	public byte[] getCiphertextProperLength(byte[] msg, int length) {
+		byte[] new_message = new byte[msg.length - length];
+		int j = length;
+	
+		for(int i = 0; i < msg.length - length; i++) {
+			new_message[i] = msg[j];
+			j++;
+		}
 		return new_message;
 	}
 
