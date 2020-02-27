@@ -120,4 +120,13 @@ public class Utilities {
 		}
 	}
 
+	public static void deleteFolder(String folder) {
+		File index = new File(folder);
+		String[] entries = index.list();
+		for (String s : entries) {
+			File currentFile = new File(index.getPath(), s);
+			currentFile.delete();
+		}
+	}
+
 }
