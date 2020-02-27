@@ -441,7 +441,7 @@ public class Encryptor {
 		return new_message;
 	}
 	
-	public byte[] getIv(byte[] msg) {
+	public byte[] getIvCBC(byte[] msg) {
 		byte[] iv = new byte[16];
 		for(int i = 0; i < iv.length; i++) {
 			iv[i] = msg[i];

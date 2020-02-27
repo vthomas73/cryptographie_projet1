@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -127,6 +128,22 @@ public class Utilities {
 			File currentFile = new File(index.getPath(), s);
 			currentFile.delete();
 		}
+	}
+
+	public static boolean verifieCTS(List<String> list, String str) {
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).contains(str))
+				return true;
+		}
+		return false;
+	}
+
+	public static String getCfgFile(List<String> list, String str) {
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).contains(str))
+				return list.get(i);
+		}
+		return null;
 	}
 
 }

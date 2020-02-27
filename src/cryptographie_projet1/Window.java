@@ -179,6 +179,9 @@ public class Window {
 				programinformations.encryptionMode = "-enc";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
+				System.out
+						.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
+				System.out.println("test : " + programinformations.key + "\n");
 				if (programinformations.key.contentEquals("")) {
 					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
 				} else if (programinformations.fileOutput.contentEquals("")) {
@@ -208,6 +211,8 @@ public class Window {
 				programinformations.encryptionMode = "-dec";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
+				System.out
+						.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
 				System.out.println("test : " + programinformations.key + "\n");
 				if (programinformations.key.contentEquals("")) {
 					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
@@ -215,6 +220,11 @@ public class Window {
 					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut être vide");
 				} else if (programinformations.filesInput.size() <= 0) {
 					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entrée");
+				} else if ((!programinformations.padding && programinformations.filesInput.size() == 1)
+						|| (!programinformations.padding && programinformations.filesInput.size() > 1
+								&& !Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"))) {
+					JOptionPane.showMessageDialog(frame,
+							"Le fichier crypto n'est pas présent, il est obligatoire en CTS, merci de l'ajouter à la liste");
 				} else {
 					verifyFileDoesNotExists(programinformations.fileOutput, frame);
 					for (int i = 0; i < programinformations.filesInput.size(); i++) {
