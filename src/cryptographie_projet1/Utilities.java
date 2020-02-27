@@ -128,6 +128,7 @@ public class Utilities {
 			File currentFile = new File(index.getPath(), s);
 			currentFile.delete();
 		}
+		index.delete();
 	}
 
 	public static boolean verifieCTS(List<String> list, String str) {
