@@ -34,9 +34,12 @@ public class Main {
 			byte[] msg = utilities.getBytesFromFile(programInfos.filesInput.get(0));
 			byte[] output = null;
 			if (programInfos.encryptionMode.equals("-enc")) {
-				//output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
-				//output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
-				output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
+				
+				// Question 1
+				output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
+				
+				// Question 6
+				//output = encryptor.cipherCts("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameOutput)));
 				byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
 				byte[] msgFinal = new byte[output.length + hmac.length];
 				System.arraycopy(output, 0, msgFinal, 0, output.length);
@@ -45,10 +48,14 @@ public class Main {
 			} else {
 				byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
 				msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
-				//output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
-				//output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
-				output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
+				
+				// Question 1
+				output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
 				output = encryptor.removeBytesAdded(output);
+				
+				// Question 6
+				//output = encryptor.cipherCts("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileNameInput)));
+				
 				byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
 				if (Arrays.equals(hmac, hmacGetted))
 				    System.out.println("Intégrité vérifiée, le fichier n'a pas été altéré");
@@ -72,9 +79,11 @@ public class Main {
 				byte[] output = null;
 				if (programInfos.encryptionMode.equals("-enc")) {
 					
-					//output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
-					//output = encryptor.encryption(msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
-					output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
+					// Question 1
+					output = encryptor.cipherCbc("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					
+					// Question 6
+					//output = encryptor.cipherCts("Encrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
 					byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
 					byte[] msgFinal = new byte[output.length + hmac.length];
 					System.arraycopy(output, 0, msgFinal, 0, output.length);
@@ -83,10 +92,15 @@ public class Main {
 				} else {
 					byte[] hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
 					msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
-					//output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
-					//output = encryptor.decryption(msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
-					output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString("test.txt")));
+					
+					// Question 1
+					output = encryptor.cipherCbc("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
 					output = encryptor.removeBytesAdded(output);
+					
+					// Question 6
+					//output = encryptor.cipherCts("Decrypt",msg, new IvParameterSpec(encryptor.get16BytesFromString(fileName)));
+					
+					
 					byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
 					if (Arrays.equals(hmac, hmacGetted))
 					    System.out.println("Intégrité vérifiée pour le fichier " + fileName + ", le fichier n'a pas été altéré");

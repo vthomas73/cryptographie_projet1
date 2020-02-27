@@ -59,14 +59,14 @@ public class Encryptor {
 		byte[] cipherDecrypt = null;
 		
 		// Create a message with the final length (the one which will be a multiple of 16 bytes) 
-			byte[] final_msg =null;
-			final_msg = messagePadding(msg);
+		byte[] final_msg =null;
+		final_msg = messagePadding(msg, "CBC");
 		
 		// Initialize an empty byte array
 		byte[][] msg16Bloc = new byte[numberOfBloc][16];
 		
 		//copy the message into an array with a length multiple of 16 bytes
-		msg = messagePadding(msg);
+		msg = messagePadding(msg, "CBC");
 		
 		// Initialise a 2D array, each line represent a 16 bytes bloc of data from the message
 		int i = 0;
@@ -83,7 +83,105 @@ public class Encryptor {
 				// Initialize the cipher with a key and in Encrypt mode
 				this.cipher.init(Cipher.ENCRYPT_MODE, this.key);
 				// If the initialization vector exist
-				if(iv != null) {
+				
+				if(cptNbBloc == 0) {
+					// We start with a XOR between the IV and the first 16 bytes
+					blocXor = xor(iv.getIV(), msg16Bloc[cptNbBloc]);
+					// Encryption of the previous XOR result
+					cipherXor = cipher.doFinal(blocXor);
+					// Add the encrypted XOR to our final message
+					add16ByteBlocToArray(0,final_msg,cipherXor);
+					cptNbBloc++;
+				}
+				
+				if(cptNbBloc < numberOfBloc) {
+					// Making a XOR between the previous encrypted XOR and the next 16 bytes of the message
+					blocXor = xor(cipherXor,msg16Bloc[cptNbBloc]);
+					// Encryption of the previous XOR result
+					cipherXor = cipher.doFinal(blocXor);
+					// Add the encrypted XOR to our final message
+					add16ByteBlocToArray(cptNbBloc,final_msg,cipherXor);
+				}
+			} 
+			
+			else if (mode == "Decrypt") {
+				this.cipher.init(Cipher.DECRYPT_MODE, this.key);
+				// If the initialization vector exist
+				
+				if(cptNbBloc == 0) {
+					// We start with a decryption of the first bloc of the ciphertext
+					cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc]);
+					// Then we do a XOR between the IV and the first 16 bytes of ciphertext that we just have decrypt
+					blocXor = xor(iv.getIV(),cipherDecrypt);
+					// Add the decrypted XOR to our final message
+					add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
+					cptNbBloc++;
+				}
+				
+				if(cptNbBloc < numberOfBloc) {
+					// Decryption of the next bloc of the ciphertext
+					cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc]);
+					// Making a XOR between the previous decrypted ciphertext and the next 16 bytes of ciphertext that we just have decrypt
+					blocXor = xor(msg16Bloc[cptNbBloc-1],cipherDecrypt);
+					// Add the encrypted XOR to our final message
+					add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
+				}
+			}
+			cptNbBloc++;
+		}
+		//return the ciphertext
+		return final_msg;
+	}
+	
+	// Function that is creating the ciphertext using a homemade CBC algorithm
+		public byte[] cipherCts(String mode, byte[] msg, IvParameterSpec iv) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+			// Initialize an empty byte array
+			byte[] blocXor = null;
+			
+			// Get the number of bloc of 16 bytes that are completely filled with the message
+			int numberOfBloc = getNumberFullBloc(msg);
+			
+			//Counter for the numberOfBloc
+			int cptNbBloc = 0;
+			
+			//Counter for the number Of Zeros in last plaintext Bloc
+			int nbZeros = 0;
+			
+			// Initialize an empty byte array
+			byte[] cipherXor = null;
+			
+			// Initialize an empty byte array
+			byte[] cipherDecrypt = null;
+			
+			// Initialize an empty byte array
+			byte[] cipherDecryptWithAdditionalByte = null;
+			
+			// Create a message with the final length (the one which will be a multiple of 16 bytes) 
+			byte[] final_msg =null;
+			final_msg = msg;
+			
+			// Initialize an empty byte array
+			byte[][] msg16Bloc = new byte[numberOfBloc][16];
+			
+			//copy the message into an array with a length multiple of 16 bytes
+			msg = messagePadding(msg, "CTS");
+			
+			// Initialise a 2D array, each line represent a 16 bytes bloc of data from the message
+			int i = 0;
+			while(i < (numberOfBloc)) {
+				for(int j = 0; j < 16; j++) {
+					msg16Bloc[i][j] += msg[i*16+j];
+				}
+				i++;
+			}
+		
+			while(cptNbBloc < numberOfBloc) {
+				// To see if we are in Encrypt or Decrypt mode
+				if(mode == "Encrypt") {
+					// Initialize the cipher with a key and in Encrypt mode
+					this.cipher.init(Cipher.ENCRYPT_MODE, this.key);
+					// If the initialization vector exist
+					
 					if(cptNbBloc == 0) {
 						// We start with a XOR between the IV and the first 16 bytes
 						blocXor = xor(iv.getIV(), msg16Bloc[cptNbBloc]);
@@ -93,24 +191,37 @@ public class Encryptor {
 						add16ByteBlocToArray(0,final_msg,cipherXor);
 						cptNbBloc++;
 					}
-					if(cptNbBloc < numberOfBloc) {
+					
+					if(cptNbBloc < numberOfBloc && cptNbBloc != (numberOfBloc - 2)) {
 						// Making a XOR between the previous encrypted XOR and the next 16 bytes of the message
 						blocXor = xor(cipherXor,msg16Bloc[cptNbBloc]);
 						// Encryption of the previous XOR result
 						cipherXor = cipher.doFinal(blocXor);
 						// Add the encrypted XOR to our final message
 						add16ByteBlocToArray(cptNbBloc,final_msg,cipherXor);
+					} 
+					else if(cptNbBloc == (numberOfBloc - 2)) {
+						// Making a XOR between the previous encrypted XOR and the next 16 bytes of the message
+						blocXor = xor(cipherXor,msg16Bloc[cptNbBloc]);
+						// Encryption of the previous XOR result
+						cipherXor = cipher.doFinal(blocXor);
+						//Calculation of number of Zeros at the end of the last plaintext Bloc
+						nbZeros = getZerosLength(msg16Bloc[cptNbBloc + 1]);
+						// Add the encrypted XOR to our final message
+						add16ByteBlocToArrayCtsPlaintext(cptNbBloc + 1,final_msg,cipherXor, nbZeros);
+						blocXor = xor(cipherXor,msg16Bloc[cptNbBloc + 1]);
+						cipherXor = cipher.doFinal(blocXor);
+						// Add the encrypted XOR to our final message
+						add16ByteBlocToArray(cptNbBloc,final_msg,cipherXor);
+						
+						cptNbBloc = numberOfBloc;
 					}
-					
-					
-				} else {
-					
-				}
+				} 
 				
-			} else if (mode == "Decrypt") {
-				this.cipher.init(Cipher.DECRYPT_MODE, this.key);
-				// If the initialization vector exist
-				if(iv != null) {
+				else if (mode == "Decrypt") {
+					this.cipher.init(Cipher.DECRYPT_MODE, this.key);
+					// If the initialization vector exist
+					
 					if(cptNbBloc == 0) {
 						// We start with a decryption of the first bloc of the ciphertext
 						cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc]);
@@ -120,7 +231,8 @@ public class Encryptor {
 						add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
 						cptNbBloc++;
 					}
-					if(cptNbBloc < numberOfBloc) {
+					
+					if(cptNbBloc < numberOfBloc && cptNbBloc != (numberOfBloc - 2)) {
 						// Decryption of the next bloc of the ciphertext
 						cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc]);
 						// Making a XOR between the previous decrypted ciphertext and the next 16 bytes of ciphertext that we just have decrypt
@@ -128,26 +240,92 @@ public class Encryptor {
 						// Add the encrypted XOR to our final message
 						add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
 					}
-				} else {
+					
+					else if(cptNbBloc == (numberOfBloc - 2)) {
+						// Decryption of the next bloc of the ciphertext
+						cipherDecryptWithAdditionalByte = cipher.doFinal(msg16Bloc[cptNbBloc]);
+						//Calculation of length of bloc to get back
+						nbZeros = (final_msg.length - ((numberOfBloc - 1) * ( 16)));
+						// Add the bytes in the last cipher bloc
+						msg16Bloc[cptNbBloc + 1] = getBackByteFromArray(msg16Bloc[cptNbBloc + 1],cipherDecryptWithAdditionalByte, nbZeros);
+						cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc + 1]);
+						// Making a XOR between the previous decrypted ciphertext and the next 16 bytes of ciphertext that we just have decrypt
+						blocXor = xor(msg16Bloc[cptNbBloc - 1],cipherDecrypt);
+						// Add the encrypted XOR to our final message
+						add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
+						// Making a XOR between the previous decrypted ciphertext and the next 16 bytes of ciphertext that we just have decrypt
+						blocXor = xor(msg16Bloc[cptNbBloc + 1],cipherDecryptWithAdditionalByte);	
+						// Add the encrypted XOR to our final message
+						add16ByteBlocToArrayCtsCiphertext(cptNbBloc + 1,final_msg,blocXor, nbZeros);
+						cptNbBloc = numberOfBloc;
+						
+					}
 				}
+				cptNbBloc++;
 			}
-			cptNbBloc++;
+			//return the ciphertext
+			return final_msg;
 		}
-		//return the ciphertext
-		return final_msg;
+	
+	// Function that return the number of Zeros at the end of last bloc of the plaintext array
+	private int getZerosLength(byte[] msg) {
+		int nbZeros = 0;
+		// count the number of Zeros
+		for(int i = 0; i < msg.length; i ++)
+			if(((msg.length - 1 - i) >= 0) && (msg[msg.length - 1 - i] == 0)) {
+				nbZeros++;
+			}
+		return nbZeros;
 	}
 	
+	// Function that get the last 'n' byte of an array
+	private byte[] getBackByteFromArray(byte[] cipher_msg, byte[] msg_with_info, int nbByteToGetBack) {
+		for(int i = nbByteToGetBack; i < msg_with_info.length; i++) {
+			cipher_msg[i] = msg_with_info[i];
+		}
+		
+		return cipher_msg;
+	}
+		
 	// Function that add a table to another the goal is to create our final message here
 	private byte[] add16ByteBlocToArray(int index, byte[] new_tab, byte[] tab_to_add) {
 		int j = index*16;
 		
 		// copy the tab_to_add into the new_tab
 		for(int i = 0; i < tab_to_add.length; i++) {
-			new_tab[j] = tab_to_add[i];
-			j++;
+			if(j < new_tab.length) {
+				new_tab[j] = tab_to_add[i];
+				j++;
+			}
 		}
 		return new_tab;
 	}
+	
+	// Function that add a table to another the goal is to create our final message here
+	private byte[] add16ByteBlocToArrayCtsPlaintext(int index, byte[] new_tab, byte[] tab_to_add, int nbZeros) {
+			int j = index*16;
+			byte[] final_tab = new byte[tab_to_add.length - nbZeros];
+			
+			// copy the tab_to_add into the new_tab
+			for(int i = 0; i < final_tab.length; i++) {
+				new_tab[j] = tab_to_add[i];
+				j++;
+			}
+			return new_tab;
+		}
+	
+	// Function that add a table to another the goal is to create our final message here
+		private byte[] add16ByteBlocToArrayCtsCiphertext(int index, byte[] new_tab, byte[] tab_to_add, int nbZeros) {
+				int j = index*16;
+				byte[] final_tab = new byte[nbZeros];
+				
+				// copy the tab_to_add into the new_tab
+				for(int i = 0; i < final_tab.length; i++) {
+					new_tab[j] = tab_to_add[i];
+					j++;
+				}
+				return new_tab;
+			}
 	
 	// Function that give the number of bloc of 16 bytes that is completely fill with the message
 	private int getNumberFullBloc(byte[] msg) {
@@ -166,8 +344,9 @@ public class Encryptor {
 		return k;
 	}
 	
+	
 	// Function that is creating a Padding on a message if the length of this one is not a multiple of 16 byte
-	private byte[] messagePadding(byte[] msg) {
+	private byte[] messagePadding(byte[] msg, String mode) {
 		// Initialize an empty byte array
 		byte[] new_message = null;
 		int numberOfBloc = getNumberFullBloc(msg);
@@ -183,10 +362,19 @@ public class Encryptor {
 			j++;
 		}
 		
-		// Fill the empty case of the byte array with the padding number
-		for(int i =0; i < padding; i++) {
-			new_message[msg.length + i] = padding.byteValue();
-		}
+		if(mode == "CBC") {
+			// Fill the empty case of the byte array with the padding number
+			for(int i =0; i < padding; i++) {
+				new_message[msg.length + i] = padding.byteValue();
+			}
+		} 
+		else if(mode == "CTS") {
+			// Fill the empty case of the byte array with the padding number
+			for(int i =0; i < padding; i++) {
+				new_message[msg.length + i] = 0;
+			}
+		} 
+		
 		
 		// Return the new message with the right length
 		return new_message;
@@ -213,6 +401,7 @@ public class Encryptor {
 		return blocXor;
 	}
 	
+	// Function that remove padding bytes at the end of a message
 	public byte[] removeBytesAdded(byte[] msg) {
 		// Creation of a byte array that will get the new_message
 		byte[] new_message = msg;
@@ -232,7 +421,7 @@ public class Encryptor {
 		
 		// if the last byte represent a PCKS5Padding byte
 		if(verif) {
-			// put the message int new_message without the padding
+			// put the message in new_message without the padding
 			new_message = new byte[msg.length - lastBit];
 			for(int j = 0; j < new_message.length; j++){
 				new_message[j] = msg[j];
