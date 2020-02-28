@@ -8,6 +8,7 @@ public class ProgramInformations {
 	public String fileOutput;
 	public String key;
 	public String encryptionMode;
+	public String fileCfg = "";
 	public boolean padding;
 	public boolean integrity;
 

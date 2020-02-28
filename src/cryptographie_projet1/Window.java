@@ -223,19 +223,16 @@ public class Window {
 				} else if ((!programinformations.padding && programinformations.filesInput.size() == 1)
 						|| (!programinformations.padding && programinformations.filesInput.size() > 1
 								&& !Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"))) {
-					JOptionPane.showMessageDialog(frame,
-							"Le fichier crypto n'est pas présent, il est obligatoire en CTS, merci de l'ajouter à la liste");
+					while (!new File(programinformations.fileCfg).getName().equals("crypto_cfg")) {
+						JOptionPane.showMessageDialog(frame,
+								"Le fichier crypto est obligatoire en CTS, merci de le sélectionner");
+						JFileChooser chooser = new JFileChooser();
+						chooser.setMultiSelectionEnabled(true);
+						chooser.showOpenDialog(frame);
+						programinformations.fileCfg = chooser.getSelectedFile().toString();
+					}
 				} else {
-					verifyFileDoesNotExists(programinformations.fileOutput, frame);
-					for (int i = 0; i < programinformations.filesInput.size(); i++) {
-						verifyFileExists(programinformations.filesInput.get(i), frame);
-					}
-					try {
-						Main.main(programinformations);
-					} catch (Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
+					execProgram();
 				}
 			}
 		});
@@ -278,6 +275,19 @@ public class Window {
 			if (res == JOptionPane.OK_OPTION) {
 				System.exit(0);
 			}
+		}
+	}
+
+	private void execProgram() {
+		verifyFileDoesNotExists(programinformations.fileOutput, frame);
+		for (int i = 0; i < programinformations.filesInput.size(); i++) {
+			verifyFileExists(programinformations.filesInput.get(i), frame);
+		}
+		try {
+			Main.main(programinformations);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 }

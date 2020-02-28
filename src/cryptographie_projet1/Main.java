@@ -166,7 +166,7 @@ public class Main {
 					}
 					// Question 6
 					else {
-						File cfg = new File(new File(programInfos.fileOutput).getAbsolutePath() + "crypto_cfg");
+						File cfg = new File(new File(programInfos.fileOutput).getAbsolutePath() + "/crypto_cfg");
 						writer = new FileWriter(cfg);
 						writer.write(new String(new IvParameterSpec(iv).getIV()));
 						output = encryptor.cipherCts("Encrypt", msg, new IvParameterSpec(iv));
