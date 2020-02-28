@@ -92,9 +92,7 @@ public class Window {
 		d.width = 200;
 		scrollPane_1.setPreferredSize(d);
 		panel_3.add(scrollPane_1);
-
-		// frame.getContentPane().add(listOutput, BorderLayout.WEST);
-
+		
 		JButton deleteItemButton = new JButton("Supprimer l'item");
 		deleteItemButton.setVisible(false);
 		deleteItemButton.addActionListener(new ActionListener() {
@@ -138,7 +136,6 @@ public class Window {
 		b2.add(Box.createHorizontalGlue());
 		panel_3.add(b2);
 		panel_3.add(b1);
-		// panel_1.add(addFilesBtn);
 		panel_1.add(lblNewLabel2);
 		panel_1.add(keyInput);
 
@@ -188,13 +185,14 @@ public class Window {
 					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut etre vide");
 				} else if (programinformations.filesInput.size() <= 0) {
 					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entree");
+				}  else if(!programinformations.padding && programinformations.filesInput.size() > 1) {
+					JOptionPane.showMessageDialog(frame,"Vous ne pouvez pas chiffrer plusieurs fichier en mode CTS");
 				} else {
-					verifyFileDoesNotExists(programinformations.fileOutput, frame);
+					
 					for (int i = 0; i < programinformations.filesInput.size(); i++) {
-						if (Utilities.getNumberBytesFile(programinformations.filesInput.get(i)) < 16
-								&& !programinformations.padding) {
-							int res = JOptionPane.showOptionDialog(null,
-									"Le chemin d'entree -in " + programinformations.filesInput.get(i)
+						if (Utilities.getNumberBytesFile(programinformations.filesInput.get(i)) <= 16 && !programinformations.padding) {
+							int res = JOptionPane.showOptionDialog(frame,
+									"Le fichier d'entree -in " + programinformations.filesInput.get(i)
 											+ " est trop court pour utiliser le CTS",
 									"Erreur", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null,
 									null);
@@ -202,6 +200,7 @@ public class Window {
 								System.exit(0);
 							}
 						}
+						verifyFileDoesNotExists(programinformations.fileOutput, frame);
 						verifyFileExists(programinformations.filesInput.get(i), frame);
 					}
 					try {
@@ -226,6 +225,8 @@ public class Window {
 					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut etre vide");
 				} else if (programinformations.filesInput.size() <= 0) {
 					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entree");
+				} else if(!programinformations.padding && programinformations.filesInput.size() > 1) {
+					JOptionPane.showMessageDialog(frame,"Vous ne pouvez pas dechiffrer plusieurs fichier en mode CTS");
 				} else if ((!programinformations.padding && programinformations.filesInput.size() == 1)
 						|| (!programinformations.padding && programinformations.filesInput.size() > 1
 								&& !Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"))) {
@@ -302,7 +303,6 @@ public class Window {
 		try {
 			Main.main(programinformations);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}

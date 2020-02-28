@@ -210,7 +210,7 @@ public class Encryptor {
 						blocXor = xor(cipherXor,msg16Bloc[cptNbBloc]);
 						// Encryption of the previous XOR result
 						cipherXor = cipher.doFinal(blocXor);
-						//Calculation of number of Zeros at the end of the last plaintext Bloc
+						// Calculation of number of Zeros at the end of the last plaintext Bloc
 						nbZeros = getZerosLength(msg16Bloc[cptNbBloc + 1]);
 						// Add the encrypted XOR to our final message
 						add16ByteBlocToArrayCtsPlaintext(cptNbBloc + 1,final_msg,cipherXor, nbZeros);
@@ -250,7 +250,7 @@ public class Encryptor {
 					else if(cptNbBloc == (numberOfBloc - 2)) {
 						// Decryption of the next bloc of the ciphertext
 						cipherDecryptWithAdditionalByte = cipher.doFinal(msg16Bloc[cptNbBloc]);
-						//Calculation of length of bloc to get back
+						// Calculation of length of bloc to get back
 						nbZeros = (final_msg.length - msg.length);
 						// Add the bytes in the last cipher bloc
 						msg16Bloc[cptNbBloc + 1] = getBackByteFromArray(msg16Bloc[cptNbBloc + 1],cipherDecryptWithAdditionalByte, nbZeros);
@@ -380,8 +380,6 @@ public class Encryptor {
 				new_message[msg.length + i] = 0;
 			}
 		} 
-		
-		
 		// Return the new message with the right length
 		return new_message;
 	}
@@ -433,7 +431,6 @@ public class Encryptor {
 			verif = false;
 		}
 		
-		
 		// if the last byte represent a PCKS5Padding byte
 		if(verif) {
 			// put the message in new_message without the padding
@@ -442,11 +439,10 @@ public class Encryptor {
 				new_message[j] = msg[j];
 			}
 		}
-		
-			
 		return new_message;
 	}
 	
+	// Function that get the iv at the beginning of the message
 	public byte[] getIvCBC(byte[] msg) {
 		byte[] iv = new byte[16];
 		for(int i = 0; i < iv.length; i++) {
@@ -455,6 +451,7 @@ public class Encryptor {
 		return iv;
 	}
 	
+	// Function that give the proper length to the array of ciphertext (by removing the Zeros padding at the end)
 	public byte[] getCiphertextProperLength(byte[] msg, int length) {
 		byte[] new_message = new byte[msg.length - length];
 		int j = length;
@@ -466,6 +463,7 @@ public class Encryptor {
 		return new_message;
 	}
 
+	// Function that transform String to byte array
 	private static byte[] hexStringToByteArray(String s) {
 		int len = s.length();
 		byte[] data = new byte[len / 2];
@@ -474,7 +472,7 @@ public class Encryptor {
 		}
 		return data;
 	}
-
+	
 	public byte[] get16BytesFromString(String msg) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		MessageDigest md = MessageDigest.getInstance("MD5");
 		md.update(msg.getBytes());

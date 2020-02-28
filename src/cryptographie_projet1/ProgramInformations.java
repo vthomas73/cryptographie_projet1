@@ -25,7 +25,7 @@ public class ProgramInformations {
 	}
 	public String toString() {
 		String str = "Padding = " + this.padding;
-		str += " intégrité = " + this.integrity;
+		str += " integrite = " + this.integrity;
 		str += " encryptionMode = " + this.encryptionMode;
 		str += " key = " + this.key;
 		str += " fileOutput = " + this.fileOutput;

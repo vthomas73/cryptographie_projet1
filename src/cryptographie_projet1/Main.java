@@ -41,7 +41,6 @@ public class Main {
 
 			// Encryption Mode
 			if (programInfos.encryptionMode.equals("-enc")) {
-
 				// Generate a secure random IV
 				iv = random.generateSeed(16);
 
@@ -53,27 +52,27 @@ public class Main {
 					System.arraycopy(output_cts, 0, output, 0, msg.length);
 				}
 				if (programInfos.integrity) {
-					// Create hmac for the integrity
+					// Create OMAC for the integrity
 					BlockCipher cipher = new AESEngine();
 					CMac cmac = new CMac(cipher);
 					cmac.init(new KeyParameter(encryptor.getKey().getEncoded()));
 
 					cmac.update(msg, 0, msg.length);
-					byte[] hmac = new byte[cmac.getMacSize()];
-					cmac.doFinal(hmac, 0);
+					byte[] omac = new byte[cmac.getMacSize()];
+					cmac.doFinal(omac, 0);
 
 					if (!programInfos.padding) {
-						// Add IV and hmac to the config file
-						config_file = new byte[iv.length + hmac.length];
+						// Add IV and OMAC to the config file
+						config_file = new byte[iv.length + omac.length];
 						System.arraycopy(iv, 0, config_file, 0, iv.length);
-						System.arraycopy(hmac, 0, config_file, iv.length, hmac.length);
+						System.arraycopy(omac, 0, config_file, iv.length, omac.length);
 					} else {
-						byte[] msgFinal = new byte[iv.length + output.length + hmac.length];
+						byte[] msgFinal = new byte[iv.length + output.length + omac.length];
 						// Add IV at the begining of the final message
 						System.arraycopy(iv, 0, msgFinal, 0, iv.length);
 						System.arraycopy(output, 0, msgFinal, iv.length, output.length);
-						// Add hmac at the end of the final message
-						System.arraycopy(hmac, 0, msgFinal, iv.length + output.length, hmac.length);
+						// Add OMAC at the end of the final message
+						System.arraycopy(omac, 0, msgFinal, iv.length + output.length, omac.length);
 						output = msgFinal;
 					}
 				} else {
@@ -98,7 +97,7 @@ public class Main {
 			}
 			// Decryption
 			else {
-				byte[] hmacGetted = new byte[16];
+				byte[] omacGetted = new byte[16];
 				if (programInfos.padding) {
 					// Get back the IV (16 first bytes of the message)
 					iv = encryptor.getIvCBC(msg);
@@ -112,9 +111,9 @@ public class Main {
 				}
 				if (programInfos.integrity) {
 					if (programInfos.padding) {
-						// Get the hmac by taking the 64 last bytes of the message
-						// hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
-						hmacGetted = Arrays.copyOfRange(msg, msg.length - 16, msg.length);
+						// Get the OMAC by taking the 64 last bytes of the message
+						
+						omacGetted = Arrays.copyOfRange(msg, msg.length - 16, msg.length);
 						// remove the 64 last bytes from the message
 						msg = Arrays.copyOfRange(msg, 0, msg.length - 16);
 						// Decryption of the message
@@ -122,8 +121,8 @@ public class Main {
 						// Erase the padding if there is some
 						output = encryptor.removeBytesAdded(output);
 					} else {
-						// Get the hmac from the config file
-						System.arraycopy(config_file, iv.length, hmacGetted, 0, config_file.length - iv.length);
+						// Get the OMAC from the config file
+						System.arraycopy(config_file, iv.length, omacGetted, 0, config_file.length - iv.length);
 						output = encryptor.cipherCts("Decrypt", msg, new IvParameterSpec(iv));
 					}
 
@@ -149,17 +148,17 @@ public class Main {
 					byte[] cmac_val = new byte[cmac.getMacSize()];
 					cmac.doFinal(cmac_val, 0);
 
-					// Get the Hmac from the decrypted message
+					// Get the OMAC from the decrypted message
 					JFrame frame;
 					frame = new JFrame();
-					// Compare the hmac get from the message / config file and the one that has just
+					// Compare the OMAC get from the message / config file and the one that has just
 					// been calculated to see if there was any integrity problem on the file
-					if (Arrays.equals(cmac_val, hmacGetted)) {
+					if (Arrays.equals(cmac_val, omacGetted)) {
 						JOptionPane.showMessageDialog(frame,
-								"L'int�grit� du fichier est v�rifi�e, le fichier n'a pas �t� alt�r�");
+								"L'integrite du fichier est verifee, le fichier n'a pas ete altere");
 					} else {
 						JOptionPane.showMessageDialog(frame,
-								"L'int�grit� du fichier n'est pas v�rifi�e, le fichier a �t� alt�r� !!!");
+								"L'integrite du fichier n'est pas verifee, le fichier a ete altere !!!");
 					}
 				}
 			}
@@ -192,32 +191,32 @@ public class Main {
 					if (programInfos.padding) {
 						output = encryptor.cipherCbc("Encrypt", msg, new IvParameterSpec(iv));
 					} else {
-						output = new byte[msg.length];
+						//output = new byte[msg.length];
 						// output_cts = encryptor.cipherCts("Encrypt", msg, new IvParameterSpec(iv));
 						// System.arraycopy(output_cts, 0, output, 0, msg.length);
 					}
 					if (programInfos.integrity) {
-						// Create hmac for the integrity
+						// Create OMAC for the integrity
 						BlockCipher cipher = new AESEngine();
 						CMac cmac = new CMac(cipher);
 						cmac.init(new KeyParameter(encryptor.getKey().getEncoded()));
 
 						cmac.update(msg, 0, msg.length);
-						byte[] hmac = new byte[cmac.getMacSize()];
-						cmac.doFinal(hmac, 0);
+						byte[] omac = new byte[cmac.getMacSize()];
+						cmac.doFinal(omac, 0);
 
 						if (!programInfos.padding) {
-							// Add IV and hmac to the config file
-							// config_file = new byte[iv.length + hmac.length];
+							// Add IV and OMAC to the config file
+							// config_file = new byte[iv.length + omac.length];
 							// System.arraycopy(iv, 0, config_file, 0, iv.length);
-							// System.arraycopy(hmac, 0, config_file, iv.length, hmac.length);
+							// System.arraycopy(omac, 0, config_file, iv.length, omac.length);
 						} else {
-							byte[] msgFinal = new byte[iv.length + output.length + hmac.length];
+							byte[] msgFinal = new byte[iv.length + output.length + omac.length];
 							// Add IV at the begining of the final message
 							System.arraycopy(iv, 0, msgFinal, 0, iv.length);
 							System.arraycopy(output, 0, msgFinal, iv.length, output.length);
-							// Add hmac at the end of the final message
-							System.arraycopy(hmac, 0, msgFinal, iv.length + output.length, hmac.length);
+							// Add OMAC at the end of the final message
+							System.arraycopy(omac, 0, msgFinal, iv.length + output.length, omac.length);
 							output = msgFinal;
 						}
 					} else {
@@ -242,7 +241,7 @@ public class Main {
 				}
 				// Decryption
 				else {
-					byte[] hmacGetted = new byte[16];
+					byte[] omacGetted = new byte[16];
 					if (programInfos.padding) {
 						// Get back the IV (16 first bytes of the message)
 						iv = encryptor.getIvCBC(msg);
@@ -256,9 +255,9 @@ public class Main {
 					}
 					if (programInfos.integrity) {
 						if (programInfos.padding) {
-							// Get the hmac by taking the 64 last bytes of the message
-							// hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
-							hmacGetted = Arrays.copyOfRange(msg, msg.length - 16, msg.length);
+							// Get the OMAC by taking the 64 last bytes of the message
+							// omacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
+							omacGetted = Arrays.copyOfRange(msg, msg.length - 16, msg.length);
 							// remove the 64 last bytes from the message
 							msg = Arrays.copyOfRange(msg, 0, msg.length - 16);
 							// Decryption of the message
@@ -266,8 +265,8 @@ public class Main {
 							// Erase the padding if there is some
 							output = encryptor.removeBytesAdded(output);
 						} else {
-							// Get the hmac from the config file
-							// System.arraycopy(config_file, iv.length, hmacGetted, 0, config_file.length -
+							// Get the OMAC from the config file
+							// System.arraycopy(config_file, iv.length, omacGetted, 0, config_file.length -
 							// iv.length);
 							// output = encryptor.cipherCts("Decrypt", msg, new IvParameterSpec(iv));
 						}
@@ -294,12 +293,12 @@ public class Main {
 						byte[] cmac_val = new byte[cmac.getMacSize()];
 						cmac.doFinal(cmac_val, 0);
 
-						// Get the Hmac from the decrypted message
+						// Get the OMAC from the decrypted message
 						JFrame frame;
 						frame = new JFrame();
-						// Compare the hmac get from the message / config file and the one that has just
+						// Compare the OMAC get from the message / config file and the one that has just
 						// been calculated to see if there was any integrity problem on the file
-						if (Arrays.equals(cmac_val, hmacGetted)) {
+						if (Arrays.equals(cmac_val, omacGetted)) {
 							JOptionPane.showMessageDialog(frame,
 									"L'integrite du fichier est verifiee, le fichier n'a pas ete altere");
 						} else {
