@@ -1,9 +1,6 @@
 package cryptographie_projet1;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
@@ -14,8 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.Mac;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.params.KeyParameter;
