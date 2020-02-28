@@ -10,6 +10,8 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import javax.crypto.spec.IvParameterSpec;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class Main {
 
@@ -46,6 +48,7 @@ public class Main {
 			encryptor.setKeyFromString(programInfos.key, "AES");
 			byte[] msg = utilities.getBytesFromFile(programInfos.filesInput.get(0));
 			byte[] output = null;
+			byte[] config_file = null;
 			if (programInfos.encryptionMode.equals("-enc")) {
 
 				// Question 1
@@ -57,16 +60,22 @@ public class Main {
 				}
 				// Question 6
 				else {
-					File cfg = new File(new File(programInfos.fileOutput).getAbsolutePath() + "crypto_cfg");
+					/*File cfg = new File(new File(programInfos.fileOutput).getAbsolutePath() + "crypto_cfg");
 					writer = new FileWriter(cfg);
-					writer.write(new String(new IvParameterSpec(iv).getIV()));
+					writer.write(new String(new IvParameterSpec(iv).getIV()));*/
+					
 					output = encryptor.cipherCts("Encrypt", msg, new IvParameterSpec(iv));
 
 				}
 				if (programInfos.integrity) {
 					byte[] hmac = encryptor.calculateHMAC(msg, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
-					if (!programInfos.padding)
-						writer.write(" " + new String(hmac));
+					if (!programInfos.padding) {
+						config_file = new byte[iv.length + hmac.length];
+						System.arraycopy(iv, 0, config_file, 0, iv.length);
+						System.arraycopy(hmac, 0, config_file, iv.length, hmac.length);
+						System.out.println("hmac = " + new String(hmac));
+						//writer.write(" " + new String(hmac));
+					}
 					else {
 						byte[] msgFinal = new byte[iv.length + output.length + hmac.length];
 						System.arraycopy(iv, 0, msgFinal, 0, iv.length);
@@ -75,36 +84,45 @@ public class Main {
 						output = msgFinal;
 					}
 				} else {
-					byte[] msgFinal = new byte[iv.length + output.length];
-					System.arraycopy(iv, 0, msgFinal, 0, iv.length);
-					System.arraycopy(output, 0, msgFinal, iv.length, output.length);
-					output = msgFinal;
+					if(!programInfos.padding) {
+						config_file = new byte[iv.length];
+						System.arraycopy(iv, 0, config_file, 0, iv.length);
+					}
+					else {
+						byte[] msgFinal = new byte[iv.length + output.length];
+						System.arraycopy(iv, 0, msgFinal, 0, iv.length);
+						System.arraycopy(output, 0, msgFinal, iv.length, output.length);
+						output = msgFinal;
+					}
 				}
 				if(!programInfos.padding) {
-					writer.write("\n");
-					writer.close();
+					/*writer.write("\n");
+					writer.close();*/
+					utilities.bytesToFile(config_file, new File(programInfos.fileOutput).getParent().toString() + "/crypto_cfg");
 				}
 			} else {
 				// Question 1 :
-				byte[] hmacGetted = null;
-				String[] splited = null;
+				byte[] hmacGetted = new byte[64];
+				//String[] splited = null;
 				if (programInfos.padding) {
 					// Get back the IV (16 first bytes of the message)
 					iv = encryptor.getIvCBC(msg);
-					System.out.println("1) msg.length = " + msg.length);
 					// Copy msg value into a new string that is 16 bytes less wide
 					msg = encryptor.getCiphertextProperLength(msg, iv.length);
-					System.out.println("2) msg.length = " + msg.length);
 				} else {
-					BufferedReader reader = new BufferedReader(
+					config_file = utilities.getBytesFromFile(new File(programInfos.fileOutput).getParent().toString() + "/crypto_cfg");
+					/*BufferedReader reader = new BufferedReader(
 							new FileReader(new File(Utilities.getCfgFile(programInfos.filesInput, "crypto_cfg"))));
 					String line = reader.readLine();
-					splited = line.split("\\s+");
-					iv = splited[0].getBytes();
+					splited = line.split("\\s+");*/
+					//iv = splited[0].getBytes();
+					
+					
+					System.arraycopy(config_file, 0, iv, 0, iv.length);
+		
 				}
 				if (programInfos.integrity) {
 					if (programInfos.padding) {
-						System.out.println("3) msg.length = " + msg.length);
 						hmacGetted = Arrays.copyOfRange(msg, msg.length - 64, msg.length);
 						// remove the 64 last bytes from the message
 						msg = Arrays.copyOfRange(msg, 0, msg.length - 64);
@@ -114,15 +132,24 @@ public class Main {
 						// Erase the padding if there is some
 						output = encryptor.removeBytesAdded(output);
 					} else {
-						hmacGetted = splited[1].getBytes();
+						
+						System.arraycopy(config_file, iv.length, hmacGetted, 0, config_file.length - iv.length);
+						System.out.println("hmacGetted = " + new String(hmacGetted));
+						//hmacGetted = splited[1].getBytes();
 						output = encryptor.cipherCts("Decrypt", msg, new IvParameterSpec(iv));
 					}
 
 				} else {
-					// Decrypt msg
-					output = encryptor.cipherCbc("Decrypt", msg, new IvParameterSpec(iv));
-					// Erase the padding if there is some
-					output = encryptor.removeBytesAdded(output);
+					if(programInfos.padding) {
+						// Decrypt msg
+						output = encryptor.cipherCbc("Decrypt", msg, new IvParameterSpec(iv));
+						// Erase the padding if there is some
+						output = encryptor.removeBytesAdded(output);
+					}
+					else {
+						output = encryptor.cipherCts("Decrypt", msg, new IvParameterSpec(iv));
+					}
+					
 				}
 
 				// Question 6 :
@@ -130,8 +157,16 @@ public class Main {
 				if (programInfos.integrity) {
 					// Get the Hmac from the message (the last 64 bytes)
 					byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
-					if (Arrays.equals(hmac, hmacGetted))
-						System.out.println("IntÃ©gritÃ© vÃ©rifiÃ©e, le fichier n'a pas Ã©tÃ© altÃ©rÃ©");
+					System.out.println("output = " + new String(output));
+					System.out.println("hmac = " + new String(hmac));
+					JFrame frame;
+					frame = new JFrame();
+					if (Arrays.equals(hmac, hmacGetted)) {
+						 JOptionPane.showMessageDialog(frame, "L'intégrité du fichier est vérifiée, le fichier n'a pas été altéré");
+					}
+					else {
+						 JOptionPane.showMessageDialog(frame, "L'intégrité du fichier n'est pas vérifiée, le fichier a été altéré !!!");
+					}
 				}
 			}
 
@@ -196,7 +231,7 @@ public class Main {
 					}
 				} else {
 					// Question 1 :
-					byte[] hmacGetted = null;
+					byte[] hmacGetted = new byte[64];
 					String[] splited = null;
 					if (programInfos.padding) {
 						// Get back the IV (16 first bytes of the message)
@@ -237,9 +272,14 @@ public class Main {
 					}
 					if (programInfos.integrity) {
 						byte[] hmac = encryptor.calculateHMAC(output, "9^%bNhi8Q^CQ#@G1%^5KX1fXT9Gl&x");
-						if (Arrays.equals(hmac, hmacGetted))
-							System.out.println("IntÃ©gritÃ© vÃ©rifiÃ©e pour le fichier " + fileName
-									+ ", le fichier n'a pas Ã©tÃ© altÃ©rÃ©");
+						JFrame frame;
+						frame = new JFrame();
+						if (Arrays.equals(hmac, hmacGetted)) {
+							 JOptionPane.showMessageDialog(frame, "L'intégrité du fichier est vérifiée, le fichier n'a pas été altéré");
+						}
+						else {
+							 JOptionPane.showMessageDialog(frame, "L'intégrité du fichier n'est pas vérifiée, le fichier a été altéré !!!");
+						}
 					}
 				}
 				utilities.bytesToFile(output, locationFolder + "/" + "tmp/" + fileName);

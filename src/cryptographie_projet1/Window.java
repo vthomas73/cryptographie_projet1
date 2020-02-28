@@ -71,7 +71,7 @@ public class Window {
 		outputNameInput = new JTextField();
 		outputNameInput.setColumns(10);
 
-		JLabel lblNewLabel2 = new JLabel("ClÃ© de chiffrement : ");
+		JLabel lblNewLabel2 = new JLabel("Clé de chiffrement : ");
 
 		keyInput = new JTextField();
 		keyInput.setColumns(10);
@@ -101,13 +101,18 @@ public class Window {
 		deleteItemButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int selectedIndex = listOutput.getSelectedIndex();
-				programinformations.filesInput.remove(selectedIndex);
-				listModel.remove(selectedIndex);
-				if (programinformations.filesInput.size() == 0) {
-					deleteItemButton.setVisible(false);
-					listModel.addElement("Vos fichiers apparaitrons ici");
+				System.out.println("selectedIndex = " + selectedIndex);
+				if(selectedIndex == -1) {
+					JOptionPane.showMessageDialog(frame, "Veuillez séléctionner un fichier avant de pouvoir le supprimer");
 				}
-
+				else {
+					programinformations.filesInput.remove(selectedIndex);
+					listModel.remove(selectedIndex);
+					if (programinformations.filesInput.size() == 0) {
+						deleteItemButton.setVisible(false);
+						listModel.addElement("Vos fichiers apparaitrons ici");
+					}
+				}
 			}
 		});
 		b1.add(deleteItemButton);
@@ -164,7 +169,7 @@ public class Window {
 		});
 		programinformations.padding = paddingRadioButton.isSelected();
 
-		JCheckBox integrityCheckBox = new JCheckBox("IntÃ©gritÃ©");
+		JCheckBox integrityCheckBox = new JCheckBox("Intégrité");
 		integrityCheckBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent itemEvent) {
 				programinformations.integrity = integrityCheckBox.isSelected();
@@ -179,15 +184,15 @@ public class Window {
 				programinformations.encryptionMode = "-enc";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
-				System.out
+				/*System.out
 						.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
-				System.out.println("test : " + programinformations.key + "\n");
+				System.out.println("test : " + programinformations.key + "\n");*/
 				if (programinformations.key.contentEquals("")) {
-					JOptionPane.showMessageDialog(frame, "La clÃ© de chiffement ne peut Ãªtre vide");
+					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
 				} else if (programinformations.fileOutput.contentEquals("")) {
-					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut Ãªtre vide");
+					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut être vide");
 				} else if (programinformations.filesInput.size() <= 0) {
-					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entrÃ©e");
+					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entrée");
 				} else {
 					verifyFileDoesNotExists(programinformations.fileOutput, frame);
 					for (int i = 0; i < programinformations.filesInput.size(); i++) {
@@ -205,32 +210,33 @@ public class Window {
 		});
 		panel.add(encryptButton);
 
-		JButton decryptButton = new JButton("DÃ©chiffrer");
+		JButton decryptButton = new JButton("Déchiffrer");
 		decryptButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				programinformations.encryptionMode = "-dec";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
-				System.out
-						.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
+				/*System.out.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
 				System.out.println("test : " + programinformations.key + "\n");
+				System.out.println("Decrypt");*/
 				if (programinformations.key.contentEquals("")) {
-					JOptionPane.showMessageDialog(frame, "La clÃ© de chiffement ne peut Ãªtre vide");
+					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
 				} else if (programinformations.fileOutput.contentEquals("")) {
-					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut Ãªtre vide");
+					JOptionPane.showMessageDialog(frame, "Le chemin de sortie du fichier ne peut être vide");
 				} else if (programinformations.filesInput.size() <= 0) {
-					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entrÃ©e");
+					JOptionPane.showMessageDialog(frame, "Aucun fichiers en entrée");
 				} else if ((!programinformations.padding && programinformations.filesInput.size() == 1)
 						|| (!programinformations.padding && programinformations.filesInput.size() > 1
 								&& !Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"))) {
 					while (!new File(programinformations.fileCfg).getName().equals("crypto_cfg")) {
 						JOptionPane.showMessageDialog(frame,
-								"Le fichier crypto est obligatoire en CTS, merci de le sÃ©lectionner");
+								"Le fichier crypto est obligatoire en CTS, merci de le sélectionner");
 						JFileChooser chooser = new JFileChooser();
 						chooser.setMultiSelectionEnabled(true);
 						chooser.showOpenDialog(frame);
 						programinformations.fileCfg = chooser.getSelectedFile().toString();
 					}
+					execProgram();
 				} else {
 					execProgram();
 				}
@@ -245,13 +251,13 @@ public class Window {
 			JOptionPane.showMessageDialog(frame, "Le chemin de sortie \" + location + \" de sortie est un dossier");
 		if (f.exists()) {
 			int dialogResult = JOptionPane.showConfirmDialog(frame,
-					"Le fichier de sortie existe dÃ©ja, voulez-vous l'Ã©craser ?", "Existe", JOptionPane.YES_NO_OPTION,
+					"Le fichier de sortie existe déja, voulez-vous l'écraser ?", "Existe", JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE);
 
 			if (dialogResult == JOptionPane.NO_OPTION) {
 				int res = JOptionPane.showOptionDialog(null,
 						"Le chemin de sortie -out " + location
-								+ " existe dÃ©ja et vous n'avez pas autorisÃ© le programme Ã  Ã©craser le fichier",
+								+ " existe déja et vous n'avez pas autorisé le programme à  écraser le fichier",
 						"Erreur", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 				if (res == JOptionPane.OK_OPTION) {
 					System.exit(0);
@@ -263,14 +269,14 @@ public class Window {
 	private void verifyFileExists(String location, JFrame frame) {
 		File f = new File(location);
 		if (!f.exists()) {
-			int res = JOptionPane.showOptionDialog(null, "Le chemin d'entrÃ©e -in " + location + " n'existe pas",
+			int res = JOptionPane.showOptionDialog(null, "Le chemin d'entrée -in " + location + " n'existe pas",
 					"Erreur", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 			if (res == JOptionPane.OK_OPTION) {
 				System.exit(0);
 			}
 		}
 		if (f.isDirectory()) {
-			int res = JOptionPane.showOptionDialog(null, "Le chemin d'entrÃ©e -in " + location + " est un dossier",
+			int res = JOptionPane.showOptionDialog(null, "Le chemin d'entrée -in " + location + " est un dossier",
 					"Erreur", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, null, null);
 			if (res == JOptionPane.OK_OPTION) {
 				System.exit(0);
