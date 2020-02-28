@@ -21,18 +21,18 @@ public class Utilities {
 		ProgramInformations programInfos = new ProgramInformations();
 		int nbFileList = args.length - 7;
 		if (!args[0].equals("-enc") && !args[0].equals("-dec"))
-			throw new Exception("Le premier argument doit être : -enc|-dec");
+			throw new Exception("Le premier argument doit ï¿½tre : -enc|-dec");
 		programInfos.encryptionMode = args[0];
 		if (args.length < 2 || !args[1].equals("-key"))
-			throw new Exception("Le deuxième argument doit être : -key");
+			throw new Exception("Le deuxiï¿½me argument doit ï¿½tre : -key");
 		if (args.length < 3)
-			throw new Exception("Le troisième argument doit être la clé K...K");
+			throw new Exception("Le troisiï¿½me argument doit ï¿½tre la clï¿½ K...K");
 		verifyHexa(args[2]);
 		programInfos.setKey(args[2]);
 		if (args.length < 4 || !args[3].equals("-in"))
-			throw new Exception("Le quatriÃ¨me argument doit être : -in");
+			throw new Exception("Le quatriÃ¨me argument doit ï¿½tre : -in");
 		if (args.length < 5)
-			throw new Exception("Le cinquième argument doit être le chemin d'entrée <input file>");
+			throw new Exception("Le cinquiï¿½me argument doit ï¿½tre le chemin d'entrï¿½e <input file>");
 		verifyFileExists(args[4]);
 		programInfos.addInputFile(args[4]);
 		for (int i = 0; i < nbFileList; i++) {
@@ -40,9 +40,9 @@ public class Utilities {
 			programInfos.addInputFile(args[4 + i + 1]);
 		}
 		if (args.length < 6 + nbFileList || !args[5 + nbFileList].equals("-out"))
-			throw new Exception("Le sixième argument doit être : -out");
+			throw new Exception("Le sixiï¿½me argument doit ï¿½tre : -out");
 		if (args.length < 7 + nbFileList)
-			throw new Exception("Le septième argument doit être le chemin de sortie <output file>");
+			throw new Exception("Le septiï¿½me argument doit ï¿½tre le chemin de sortie <output file>");
 		verifyFileDoesNotExists(args[6 + nbFileList]);
 		programInfos.setOutputFile(args[6 + nbFileList]);
 		return programInfos;
@@ -51,18 +51,18 @@ public class Utilities {
 	private void verifyHexa(String key) throws Exception {
 		boolean isHex = key.matches("[0-9|a-f|A-F]*");
 		if (key.length() != 32 && key.length() != 48 && key.length() != 64)
-			throw new Exception("La clé n'est pas codée sur 128/192 ou 254 bits !");
+			throw new Exception("La clï¿½ n'est pas codï¿½e sur 128/192 ou 254 bits !");
 		if (!isHex)
-			throw new Exception("La clé n'est pas au format hexadécimal");
+			throw new Exception("La clï¿½ n'est pas au format hexadï¿½cimal");
 	}
 
 	private void verifyFileExists(String location) throws Exception {
 		File f = new File(location);
 		if (!f.exists()) {
-			throw new Exception("Le chemin d'entrée -in " + location + " n'existe pas");
+			throw new Exception("Le chemin d'entrï¿½e -in " + location + " n'existe pas");
 		}
 		if (f.isDirectory())
-			throw new Exception("Le chemin d'entrée -in " + location + " n'est un dossier");
+			throw new Exception("Le chemin d'entrï¿½e -in " + location + " n'est un dossier");
 	}
 
 	private void verifyFileDoesNotExists(String location) throws Exception {
@@ -70,13 +70,13 @@ public class Utilities {
 		if (f.isDirectory())
 			throw new Exception("Le chemin de sortie " + location + " -out est un dossier");
 		if (f.exists()) {
-			System.out.print("Le fichier existe déja, voulez-vous l'écraser ? Yes/No\n");
+			System.out.print("Le fichier existe dï¿½ja, voulez-vous l'ï¿½craser ? Yes/No\n");
 			Scanner scanner = new Scanner(System.in);
 			String inputString = scanner.nextLine();
 			scanner.close();
 			if (!inputString.toLowerCase().equals("yes"))
 				throw new Exception("Le chemin de sortie -out " + location
-						+ " existe déja et vous n'avez pas autorisé le programme à  écraser le fichier");
+						+ " existe dï¿½ja et vous n'avez pas autorisï¿½ le programme ï¿½ ï¿½craser le fichier");
 		}
 	}
 
@@ -145,6 +145,19 @@ public class Utilities {
 				return list.get(i);
 		}
 		return null;
+	}
+
+	public static String getFileExtension(File file) {
+		String fileName = file.getName();
+		if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+			return fileName.substring(fileName.lastIndexOf(".") + 1);
+		else
+			return "";
+	}
+
+	public static long getNumberBytesFile(String file) {
+		File newfile = new File(file);
+		return newfile.length();
 	}
 
 }
