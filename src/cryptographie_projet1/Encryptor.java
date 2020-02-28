@@ -19,7 +19,6 @@ public class Encryptor {
 	private SecretKey key;
 	private Cipher cipher;
 	private String encryptionType;
-	private String ALGO_OPTIONS = "/CBC/PKCS5PADDING";
 	private String ALGO_OPTIONS_ECB = "/ECB/NoPadding";
 
 	public SecretKey setRandomKey(String encryptionType) throws NoSuchAlgorithmException, NoSuchPaddingException {
@@ -28,6 +27,14 @@ public class Encryptor {
 		keyGen.init(128);
 		this.key = keyGen.generateKey();
 		this.cipher = Cipher.getInstance(this.encryptionType);
+		return this.key;
+	}
+	
+	public Cipher getCipher() {
+		return this.cipher;
+	}
+	
+	public SecretKey getKey() {
 		return this.key;
 	}
 
@@ -140,7 +147,6 @@ public class Encryptor {
 			
 			// Get the number of bloc of 16 bytes that are completely filled with the message
 			int numberOfBloc = getNumberFullBloc(msg);
-			
 			//Counter for the numberOfBloc
 			int cptNbBloc = 0;
 			
@@ -162,15 +168,14 @@ public class Encryptor {
 			
 			// Initialize an empty byte array
 			byte[][] msg16Bloc = new byte[numberOfBloc][16];
-			
 			//copy the message into an array with a length multiple of 16 bytes
-			msg = messagePadding(msg, "CTS");
-			
+			final_msg = messagePadding(final_msg, "CTS");
+
 			// Initialise a 2D array, each line represent a 16 bytes bloc of data from the message
 			int i = 0;
 			while(i < (numberOfBloc)) {
 				for(int j = 0; j < 16; j++) {
-					msg16Bloc[i][j] += msg[i*16+j];
+					msg16Bloc[i][j] += final_msg[i*16+j];
 				}
 				i++;
 			}
@@ -219,6 +224,7 @@ public class Encryptor {
 				} 
 				
 				else if (mode == "Decrypt") {
+					
 					this.cipher.init(Cipher.DECRYPT_MODE, this.key);
 					// If the initialization vector exist
 					
@@ -245,7 +251,7 @@ public class Encryptor {
 						// Decryption of the next bloc of the ciphertext
 						cipherDecryptWithAdditionalByte = cipher.doFinal(msg16Bloc[cptNbBloc]);
 						//Calculation of length of bloc to get back
-						nbZeros = (final_msg.length - ((numberOfBloc - 1) * ( 16)));
+						nbZeros = (final_msg.length - msg.length);
 						// Add the bytes in the last cipher bloc
 						msg16Bloc[cptNbBloc + 1] = getBackByteFromArray(msg16Bloc[cptNbBloc + 1],cipherDecryptWithAdditionalByte, nbZeros);
 						cipherDecrypt = cipher.doFinal(msg16Bloc[cptNbBloc + 1]);
@@ -253,12 +259,12 @@ public class Encryptor {
 						blocXor = xor(msg16Bloc[cptNbBloc - 1],cipherDecrypt);
 						// Add the encrypted XOR to our final message
 						add16ByteBlocToArray(cptNbBloc,final_msg,blocXor);
+						
 						// Making a XOR between the previous decrypted ciphertext and the next 16 bytes of ciphertext that we just have decrypt
 						blocXor = xor(msg16Bloc[cptNbBloc + 1],cipherDecryptWithAdditionalByte);	
 						// Add the encrypted XOR to our final message
 						add16ByteBlocToArrayCtsCiphertext(cptNbBloc + 1,final_msg,blocXor, nbZeros);
 						cptNbBloc = numberOfBloc;
-						
 					}
 				}
 				cptNbBloc++;
@@ -280,7 +286,7 @@ public class Encryptor {
 	
 	// Function that get the last 'n' byte of an array
 	private byte[] getBackByteFromArray(byte[] cipher_msg, byte[] msg_with_info, int nbByteToGetBack) {
-		for(int i = nbByteToGetBack; i < msg_with_info.length; i++) {
+		for(int i = msg_with_info.length - nbByteToGetBack; i < msg_with_info.length; i++) {
 			cipher_msg[i] = msg_with_info[i];
 		}
 		
@@ -317,7 +323,7 @@ public class Encryptor {
 	// Function that add a table to another the goal is to create our final message here
 		private byte[] add16ByteBlocToArrayCtsCiphertext(int index, byte[] new_tab, byte[] tab_to_add, int nbZeros) {
 				int j = index*16;
-				byte[] final_tab = new byte[nbZeros];
+				byte[] final_tab = new byte[tab_to_add.length - nbZeros];
 				
 				// copy the tab_to_add into the new_tab
 				for(int i = 0; i < final_tab.length; i++) {
@@ -474,13 +480,4 @@ public class Encryptor {
 		md.update(msg.getBytes());
 		return md.digest();
 	}
-	
-	public byte[] calculateHMAC(byte[] data, String key)
-		    throws NoSuchAlgorithmException, InvalidKeyException
-		{
-		    SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), "HmacSHA512");
-		    Mac mac = Mac.getInstance("HmacSHA512");
-		    mac.init(secretKeySpec);
-		    return mac.doFinal(data);
-		}
 }

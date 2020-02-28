@@ -101,7 +101,6 @@ public class Window {
 		deleteItemButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int selectedIndex = listOutput.getSelectedIndex();
-				System.out.println("selectedIndex = " + selectedIndex);
 				if(selectedIndex == -1) {
 					JOptionPane.showMessageDialog(frame, "Veuillez séléctionner un fichier avant de pouvoir le supprimer");
 				}
@@ -184,9 +183,6 @@ public class Window {
 				programinformations.encryptionMode = "-enc";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
-				/*System.out
-						.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
-				System.out.println("test : " + programinformations.key + "\n");*/
 				if (programinformations.key.contentEquals("")) {
 					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
 				} else if (programinformations.fileOutput.contentEquals("")) {
@@ -205,7 +201,6 @@ public class Window {
 						e1.printStackTrace();
 					}
 				}
-				System.out.println(programinformations.toString());
 			}
 		});
 		panel.add(encryptButton);
@@ -216,9 +211,6 @@ public class Window {
 				programinformations.encryptionMode = "-dec";
 				programinformations.fileOutput = outputNameInput.getText();
 				programinformations.key = keyInput.getText();
-				/*System.out.println("VerifieCTS = " + Utilities.verifieCTS(programinformations.filesInput, "crypto_cfg"));
-				System.out.println("test : " + programinformations.key + "\n");
-				System.out.println("Decrypt");*/
 				if (programinformations.key.contentEquals("")) {
 					JOptionPane.showMessageDialog(frame, "La clé de chiffement ne peut être vide");
 				} else if (programinformations.fileOutput.contentEquals("")) {
